@@ -1,0 +1,73 @@
+{
+  "The Paramount Theater": {
+    "place_id": "ChIJ-3GDKCSGs4kRNNtfmVvjw_I",
+    "address": "215 E Main St, Charlottesville, VA 22902, USA",
+    "populartimes": null,
+    "current_popularity": null,
+    "time_spent": null
+  },
+  "Downtown Mall": {
+    "place_id": "ChIJ____7yaGs4kR1BhvIOFlBlY",
+    "error": "('Google Places REQUEST_DENIED', 'Request was denied, the API key is invalid.')"
+  },
+  "Ting Pavilion": {
+    "place_id": "ChIJvcWRGyeGs4kRlAVVn6a4V1o",
+    "address": "700 E Main St, Charlottesville, VA 22902, USA",
+    "populartimes": null,
+    "current_popularity": null,
+    "time_spent": null
+  },
+  "The Whiskey Jar": {
+    "place_id": "ChIJRxkLrSWGs4kRUySqS8deLBg",
+    "address": "227 W Main St, Charlottesville, VA 22902, USA",
+    "populartimes": null,
+    "current_popularity": null,
+    "time_spent": null
+  },
+  "McGuffey Art Center": {
+    "place_id": "ChIJA3xKwCWGs4kR3K3Ox66eWzs",
+    "error": "('Google Places REQUEST_DENIED', 'Request was denied, the API key is invalid.')"
+  },
+  "Citizen Burger Bar": {
+    "place_id": "ChIJ_VpDnCaGs4kRGdjWndt1uIA",
+    "address": "212 E Main St, Charlottesville, VA 22902, USA",
+    "populartimes": null,
+    "current_popularity": null,
+    "time_spent": null
+  },
+  "The Jefferson Theater": {
+    "place_id": "ChIJZUuDKySGs4kR5DJF7Yt4wtM",
+    "address": "110 E Main St, Charlottesville, VA 22902, USA",
+    "populartimes": null,
+    "current_popularity": null,
+    "time_spent": null
+  },
+  "The Southern Café and Music Hall": {
+    "place_id": "ChIJsX4SMSSGs4kRVmtAg0ahe2A",
+    "address": "103 1st St S, Charlottesville, VA 22902, USA",
+    "populartimes": null,
+    "current_popularity": null,
+    "time_spent": null
+  },
+  "The Inn at Court Square": {
+    "place_id": "ChIJva7FTSaGs4kRP8lZBXgVDVI",
+    "address": "410 E Jefferson St, Charlottesville, VA 22902, USA",
+    "populartimes": null,
+    "current_popularity": null,
+    "time_spent": null
+  },
+  "Chaps Ice Cream": {
+    "place_id": "ChIJX7tYiCaGs4kRsW1_HVeOKTI",
+    "address": "223 E Main St, Charlottesville, VA 22902, USA",
+    "populartimes": null,
+    "current_popularity": null,
+    "time_spent": null
+  },
+  "Miller's Downtown": {
+    "place_id": "ChIJ13muzCWGs4kRsN2z4eq3h58",
+    "address": "109 W Main St, Charlottesville, VA 22902, USA",
+    "populartimes": null,
+    "current_popularity": null,
+    "time_spent": null
+  }
+}
