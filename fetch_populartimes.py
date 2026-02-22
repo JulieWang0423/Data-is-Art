@@ -14,8 +14,12 @@ import populartimes
 import json
 import csv
 import time
+import os
+from dotenv import load_dotenv
 
-API_KEY = "AIzaSyA5EcpEA1cOCit9yVhExVL9CqHCHDpHTIk"
+load_dotenv()  # 加载 .env 文件中的变量
+API_KEY = os.getenv("GOOGLE_API_KEY")
+
 
 PLACES = {
     "The Paramount Theater":              "ChIJ-3GDKCSGs4kRNNtfmVvjw_I",
