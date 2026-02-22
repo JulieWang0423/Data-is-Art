@@ -1,126 +1,160 @@
 """
-Downtown Mall Popular Times 数据爬取脚本
-========================================
-使用方法:
-  1. pip install git+https://github.com/m-wrzr/populartimes.git
-  2. python fetch_populartimes.py
+Downtown Mall Popular Times 数据获取（v3 - 已验证地点）
+======================================================
+这些地点已在 Google Maps 上确认有 Popular Times 显示。
 
-输出:
-  - populartimes_data.json  (完整原始数据)
-  - populartimes_summary.csv (7x24 热度矩阵，方便分析)
+安装:
+  pip3 install --upgrade git+https://github.com/GrocerCheck/LivePopularTimes
+
+运行:
+  python3 fetch_populartimes.py
 """
 
-import populartimes
 import json
-import csv
 import time
+import csv
+import sys
 import os
 from dotenv import load_dotenv
 
 load_dotenv()  # 加载 .env 文件中的变量
-API_KEY = os.getenv("GOOGLE_API_KEY")
+API_KEY = os.getenv("GOOGLE_API_KEY") # 从系统环境读取
 
+try:
+    import livepopulartimes
+except ImportError:
+    print("❌ 请先安装 LivePopularTimes:")
+    print("   pip3 install --upgrade git+https://github.com/GrocerCheck/LivePopularTimes")
+    sys.exit(1)
 
-PLACES = {
-    "The Paramount Theater":              "ChIJ-3GDKCSGs4kRNNtfmVvjw_I",
-    "Downtown Mall":                      "ChIJ____7yaGs4kR1BhvIOFlBlY",
-    "Ting Pavilion":                      "ChIJvcWRGyeGs4kRlAVVn6a4V1o",
-    "The Whiskey Jar":                    "ChIJRxkLrSWGs4kRUySqS8deLBg",
-    "McGuffey Art Center":                "ChIJA3xKwCWGs4kR3K3Ox66eWzs",
-    "Citizen Burger Bar":                 "ChIJ_VpDnCaGs4kRGdjWndt1uIA",
-    "The Jefferson Theater":              "ChIJZUuDKySGs4kR5DJF7Yt4wtM",
-    "The Southern Café and Music Hall":   "ChIJsX4SMSSGs4kRVmtAg0ahe2A",
-    "The Inn at Court Square":            "ChIJva7FTSaGs4kRP8lZBXgVDVI",
-    "Chaps Ice Cream":                    "ChIJX7tYiCaGs4kRsW1_HVeOKTI",
-    "Miller's Downtown":                  "ChIJ13muzCWGs4kRsN2z4eq3h58",
-}
+PLACES = [
+    {"name": "IX Art Park", "place_id": "ChIJ394bSiKGs4kR9B-gnGQa9-Y", "address": "522 2nd St SE D, Charlottesville, VA 22902"},
+    {"name": "Downtown Mall", "place_id": "ChIJ____7yaGs4kR1BhvIOFlBlY", "address": "Downtown Mall, Charlottesville, VA 22902"},
+    {"name": "Charlottesville Area Transit", "place_id": "ChIJ68f3IieGs4kRg0JGj_QrgYg", "address": "615 E Water St, Charlottesville, VA 22902"},
+    {"name": "Virginia Discovery Museum", "place_id": "ChIJX5VyHieGs4kRBBUAQ7bM7EE", "address": "524 E Main St, Charlottesville, VA 22902"},
+    {"name": "Melting Pot", "place_id": "ChIJB4bTwiaGs4kR9ZCpAqsx6Sw", "address": "501 E Water St, Charlottesville, VA 22902"},
+    {"name": "York Place", "place_id": "ChIJl8IlOCSGs4kR0SL8hULRO6U", "address": "W Water St, Charlottesville, VA 22902"},
+    {"name": "Chaps Ice Cream", "place_id": "ChIJX7tYiCaGs4kRsW1_HVeOKTI", "address": "321 E Main St, Charlottesville, VA 22902"},
+    {"name": "Zocalo", "place_id": "ChIJ-0xlhyaGs4kRnhWkdSwEm1w", "address": "201 E Main St Unit E, Charlottesville, VA 22902"},
+    {"name": "Charlottesville City Hall", "place_id": "ChIJEaKGDieGs4kRvEt9T7NkD2M", "address": "605 E Main St, Charlottesville, VA 22902"},
+    {"name": "SHENANIGANS Toy Store", "place_id": "ChIJW77uHTuGs4kRl_-7i-ctmi8", "address": "601 W Main St, Charlottesville, VA 22903"},
+    {"name": "DOMA Korean Kitchen", "place_id": "ChIJUf9ZqzuGs4kR6Av3vRQgHBA", "address": "701 W Main St, Charlottesville, VA 22903"},
+    {"name": "Lewis and Clark Memorial Marker", "place_id": "ChIJZb-ObACHs4kRqXHuz8Xg_Kg", "address": "W Main St, Charlottesville, VA 22902"},
+    {"name": "Camellias Bar & Roastery", "place_id": "ChIJZR0fwhqHs4kRzrBDF4u8uvA", "address": "400 Preston Ave #150, Charlottesville, VA 22903"},
+    {"name": "The Whiskey Jar", "place_id": "ChIJRxkLrSWGs4kRUySqS8deLBg", "address": "227 W Main St, Charlottesville, VA 22902"},
+    {"name": "Citizen Burger Bar", "place_id": "ChIJ_VpDnCaGs4kRGdjWndt1uIA", "address": "212 E Main St, Charlottesville, VA 22902"},
+    {"name": "Market Street Park", "place_id": "ChIJa5EkdCaGs4kRwpJO_gE35zQ", "address": "101 E Market St, Charlottesville, VA 22902"},
+    {"name": "Miller's Downtown", "place_id": "ChIJ13muzCWGs4kRsN2z4eq3h58", "address": "109 W Main St, Charlottesville, VA 22902"},
+]
 
-DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+results = {}
+success_count = 0
 
+print("🔍 Fetching Popular Times for Downtown Mall locations...")
+print("=" * 60)
 
-def fetch_all():
-    results = {}
-    for name, pid in PLACES.items():
-        print(f"📍 Fetching: {name} ...", end=" ")
-        try:
-            data = populartimes.get_id(API_KEY, pid)
-            has_data = data.get("populartimes") is not None
-            results[name] = {
-                "place_id": pid,
-                "address": data.get("address", ""),
-                "populartimes": data.get("populartimes", None),
-                "current_popularity": data.get("current_popularity", None),
-                "time_spent": data.get("time_spent", None),
-            }
-            print("✅" if has_data else "⚠️  No populartimes data")
-        except Exception as e:
-            print(f"❌ Error: {e}")
-            results[name] = {"place_id": pid, "error": str(e)}
-        time.sleep(1)
+for i, place in enumerate(PLACES):
+    name = place["name"]
+    print(f"\n[{i+1}/{len(PLACES)}] 📍 {name}")
 
-    return results
+    # 方法 1: Place ID
+    got_data = False
+    try:
+        data = livepopulartimes.get_populartimes_by_PlaceID(API_KEY, place["place_id"])
+        if data.get("populartimes"):
+            results[name] = data
+            got_data = True
+            success_count += 1
+            max_val, max_day, max_hour = 0, "", 0
+            for day in data["populartimes"]:
+                for h, val in enumerate(day.get("data", [])):
+                    if val > max_val:
+                        max_val, max_day, max_hour = val, day["name"], h
+            print(f"   ✅ PlaceID method worked! Peak: {max_day} {max_hour}:00 ({max_val}/100)")
+    except Exception as e:
+        print(f"   ⚠️  PlaceID method failed: {str(e)[:80]}")
 
+    if got_data:
+        time.sleep(2)
+        continue
 
-def save_json(results, filename="populartimes_data.json"):
-    with open(filename, "w", encoding="utf-8") as f:
-        json.dump(results, f, indent=2, ensure_ascii=False)
-    print(f"\n💾 JSON saved to: {filename}")
+    # 方法 2: Address
+    try:
+        data = livepopulartimes.get_populartimes_by_address(place["address"])
+        if data.get("populartimes"):
+            results[name] = data
+            got_data = True
+            success_count += 1
+            max_val, max_day, max_hour = 0, "", 0
+            for day in data["populartimes"]:
+                for h, val in enumerate(day.get("data", [])):
+                    if val > max_val:
+                        max_val, max_day, max_hour = val, day["name"], h
+            print(f"   ✅ Address method worked! Peak: {max_day} {max_hour}:00 ({max_val}/100)")
+        else:
+            print(f"   ❌ No popular times returned")
+            results[name] = {"status": "no_data", "raw": data}
+    except Exception as e:
+        print(f"   ❌ Address method failed: {str(e)[:80]}")
+        results[name] = {"status": "error", "error": str(e)}
 
+    time.sleep(3)
 
-def save_csv(results, filename="populartimes_summary.csv"):
-    """
-    输出格式:
-    Place, Day, 0, 1, 2, ..., 23
-    Citizen Burger Bar, Monday, 0, 0, 0, ..., 12
-    """
-    with open(filename, "w", newline="", encoding="utf-8") as f:
-        writer = csv.writer(f)
-        header = ["Place", "Day"] + [f"{h}:00" for h in range(24)]
-        writer.writerow(header)
+# ============================================================
+# 保存结果
+# ============================================================
+print("\n" + "=" * 60)
+print(f"📊 Results: {success_count}/{len(PLACES)} places returned data\n")
 
-        for name, data in results.items():
-            pt = data.get("populartimes")
-            if not pt:
-                continue
-            for day in pt:
-                row = [name, day["name"]] + day["data"]
-                writer.writerow(row)
+# 1. JSON
+with open("populartimes_data.json", "w", encoding="utf-8") as f:
+    json.dump(results, f, indent=2, ensure_ascii=False)
+print("💾 populartimes_data.json")
 
-    print(f"📊 CSV saved to: {filename}")
-
-
-def print_summary(results):
-    print("\n" + "=" * 60)
-    print("SUMMARY")
-    print("=" * 60)
+# 2. CSV 矩阵
+with open("populartimes_matrix.csv", "w", newline="", encoding="utf-8") as f:
+    writer = csv.writer(f)
+    writer.writerow(["place", "day"] + [f"{h}:00" for h in range(24)])
     for name, data in results.items():
         pt = data.get("populartimes")
         if not pt:
-            print(f"  {name}: No data available")
             continue
-
-        # 找到全周最热的时段
-        max_val, max_day, max_hour = 0, "", 0
         for day in pt:
-            for h, val in enumerate(day["data"]):
-                if val > max_val:
-                    max_val, max_day, max_hour = val, day["name"], h
+            writer.writerow([name, day["name"]] + day.get("data", [0]*24))
+print("💾 populartimes_matrix.csv")
 
-        current = data.get("current_popularity")
-        time_spent = data.get("time_spent")
+# 3. 打印成功地点的摘要
+print("\n" + "=" * 60)
+print("📋 SUMMARY")
+print("=" * 60)
 
-        print(f"\n  📍 {name}")
-        print(f"     Peak: {max_day} {max_hour}:00 (popularity {max_val}/100)")
-        if current is not None:
-            print(f"     Current: {current}/100")
-        if time_spent:
-            print(f"     Avg visit: {time_spent[0]}-{time_spent[1]} min")
+DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+BAR_WIDTH = 30
 
+for name, data in results.items():
+    pt = data.get("populartimes")
+    if not pt:
+        print(f"\n  ❌ {name}: No data")
+        continue
 
-if __name__ == "__main__":
-    print("🔍 Fetching Popular Times for Downtown Mall locations...\n")
-    results = fetch_all()
-    save_json(results)
-    save_csv(results)
-    print_summary(results)
-    print("\n✅ All done!")
+    print(f"\n  📍 {name}")
+    current = data.get("current_popularity")
+    if current:
+        print(f"     🔴 Live now: {current}/100")
+    time_spent = data.get("time_spent")
+    if time_spent:
+        print(f"     ⏱️  Avg visit: {time_spent[0]}-{time_spent[1]} min")
+
+    # 每天的峰值
+    for day in pt:
+        day_data = day.get("data", [])
+        if not day_data or max(day_data) == 0:
+            print(f"     {day['name']:9s} │ (closed)")
+            continue
+        peak_hour = day_data.index(max(day_data))
+        peak_val = max(day_data)
+        bar_len = int(peak_val / 100 * BAR_WIDTH)
+        bar = "█" * bar_len + "░" * (BAR_WIDTH - bar_len)
+        print(f"     {day['name']:9s} │ {bar} peak {peak_val} @ {peak_hour}:00")
+
+print(f"\n✅ Done! Check populartimes_data.json and populartimes_matrix.csv")
