@@ -25,7 +25,7 @@ LON = -78.4767
 API_URL = (
     f"https://archive-api.open-meteo.com/v1/archive"
     f"?latitude={LAT}&longitude={LON}"
-    f"&start_date=2025-01-01&end_date=2025-12-31"
+    f"&start_date=2015-01-01&end_date=2025-12-31"
     f"&daily=temperature_2m_max,temperature_2m_min,temperature_2m_mean,"
     f"precipitation_sum,weather_code"
     f"&timezone=America/New_York"
